@@ -27,8 +27,8 @@ try:
 except ImportError:
     GPU_AVAILABLE = False
     
-# Configuration
-config = DecoupleConfig(RepositoryEnv('.env'))
+# Configuration (.env is optional; without it, settings come from os.environ or the defaults below)
+config = DecoupleConfig(RepositoryEnv('.env')) if os.path.exists('.env') else DecoupleConfig({})
 
 USE_LOCAL_LLM = config.get("USE_LOCAL_LLM", default=False, cast=bool)
 API_PROVIDER = config.get("API_PROVIDER", default="OPENAI", cast=str) # OPENAI or CLAUDE
@@ -631,16 +631,17 @@ EXPLANATION: [Your explanation]
         logging.error(f"Raw response: {response}")
         return None, None
     
-async def main():
+async def main(
+    input_pdf_file_path: str = '160301289-Warren-Buffett-Katharine-Graham-Letter.pdf',
+    max_test_pages: int = 0,
+    skip_first_n_pages: int = 0,
+    reformat_as_markdown: bool = True,
+    suppress_headers_and_page_numbers: bool = True,
+):
     try:
         # Suppress HTTP request logs
         logging.getLogger("httpx").setLevel(logging.WARNING)
-        input_pdf_file_path = '160301289-Warren-Buffett-Katharine-Graham-Letter.pdf'
-        max_test_pages = 0
-        skip_first_n_pages = 0
-        reformat_as_markdown = True
-        suppress_headers_and_page_numbers = True
-        
+
         # Download the model if using local LLM
         if USE_LOCAL_LLM:
             _, download_status = await download_models()
